@@ -28,12 +28,12 @@ stock_theme_dashboard/
 
 ## セットアップ方法
 
-既存の `stock_list` 仮想環境を使います。
+Pythonの仮想環境を作成して依存パッケージをインストールします。
 
 ```bash
-cd /home/awaka/stock/stock_list
-source stock_list/bin/activate
-pip install -r stock_theme_dashboard/requirements.txt
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
 必要に応じて `.env.example` を `.env` にコピーし、キャッシュTTLなどを変更できます。
@@ -41,7 +41,6 @@ pip install -r stock_theme_dashboard/requirements.txt
 ## 実行方法
 
 ```bash
-cd /home/awaka/stock/stock_list/stock_theme_dashboard
 streamlit run app.py
 ```
 
@@ -63,8 +62,7 @@ Actionsでは以下を実行します。
 ローカルで動作確認したい場合は、以下のコマンドでも更新できます。
 
 ```bash
-cd /home/awaka/stock/stock_list/stock_theme_dashboard
-/home/awaka/stock/stock_list/stock_list/bin/python scripts/update_dashboard_data.py
+python scripts/update_dashboard_data.py
 ```
 
 取得結果は `data/dashboard_data.csv` に保存されます。アプリはこの保存済みデータを優先して表示します。`watchlist.csv` を編集した場合は、古い保存済みデータを使わずに再取得します。
