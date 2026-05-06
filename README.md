@@ -18,6 +18,7 @@ stock_theme_dashboard/
     __init__.py
     config.py
     data_loader.py
+    git_sync.py
     metrics.py
     ui.py
     providers/
@@ -47,7 +48,7 @@ streamlit run app.py
 
 ## GitHub Actionsでの定時更新
 
-株価データはGitHub Actionsで平日16:00（JST）に自動更新できます。ワークフローは `.github/workflows/update-dashboard-data.yml` にあります。
+株価データはGitHub Actionsで平日17:30（JST）に自動更新できます。ワークフローは `.github/workflows/update-dashboard-data.yml` にあります。
 
 Actionsでは以下を実行します。
 
@@ -60,7 +61,9 @@ Actionsでは以下を実行します。
 
 取得結果は `data/dashboard_data.csv` に保存されます。アプリはこの保存済みデータを優先して表示します。`watchlist.csv` を編集した場合は、古い保存済みデータを使わずに再取得します。
 
-アプリ内の `Watchlist Editor` で銘柄やセクターを編集する機能は残しています。ただしGitHub Actionsが使うのはGitHub上の `data/watchlist.csv` です。ローカルで編集した内容をActionsの次回更新に反映したい場合は、`data/watchlist.csv` をコミットしてGitHubへpushしてください。
+アプリ内の `Watchlist Editor` で銘柄やセクターを編集できます。保存ボタンを押すと、ローカルの `data/watchlist.csv` を更新したうえで自動的に GitHub へ push します。push をトリガに上記ワークフローが走り、`dashboard_data.csv` が即時に更新されます。
+
+push にはローカルの git 認証情報（PAT もしくは SSH キー）が必要です。push に失敗した場合はターミナルで `git push` を手動実行してください。
 
 ## watchlist.csv の編集方法
 

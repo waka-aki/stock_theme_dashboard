@@ -1,7 +1,7 @@
 import pandas as pd
 import streamlit as st
 
-from src.config import CACHE_TTL_SECONDS, DASHBOARD_DATA_PATH, WATCHLIST_PATH
+from src.config import CACHE_TTL_SECONDS, DASHBOARD_DATA_PATH, ROOT_DIR, WATCHLIST_PATH
 from src.data_loader import (
     WATCHLIST_COLUMNS,
     load_dashboard_snapshot,
@@ -10,6 +10,7 @@ from src.data_loader import (
     save_watchlist,
     validate_watchlist,
 )
+from src.git_sync import push_watchlist
 from src.metrics import CHANGE_WINDOWS, category_return_summary, subcategory_summary
 from src.providers.yfinance_provider import build_dashboard_data
 from src.ui import (
@@ -130,7 +131,7 @@ def render_category_summary_tab(df: pd.DataFrame) -> None:
 
 
 def render_watchlist_editor_tab() -> None:
-    st.caption("保存ボタンを押すまで CSV は書き換えません。")
+    st.caption("保存ボタンを押すと、ローカル CSV を更新したうえで GitHub に push し、Actions による更新を起動します。")
     current = load_watchlist(WATCHLIST_PATH)
     edited = st.data_editor(
         current,
@@ -144,14 +145,25 @@ def render_watchlist_editor_tab() -> None:
     if errors:
         st.warning("\n".join(errors))
 
-    confirm = st.checkbox("内容を確認し、watchlist.csv を上書き保存する")
-    if st.button("保存", type="primary", disabled=not confirm):
+    confirm = st.checkbox("内容を確認し、watchlist.csv を上書き保存して GitHub に push する")
+    if st.button("保存 & GitHub へ push", type="primary", disabled=not confirm):
         try:
             save_watchlist(edited, WATCHLIST_PATH)
             st.cache_data.clear()
-            st.success("watchlist.csv を保存しました。")
+            st.success("watchlist.csv をローカル保存しました。")
         except Exception as exc:
             st.error(f"保存に失敗しました: {exc}")
+            return
+
+        ok, message = push_watchlist(ROOT_DIR)
+        if ok:
+            st.success(f"GitHub: {message}")
+        else:
+            st.warning(
+                "ローカル保存は成功しましたが GitHub への反映に失敗しました。"
+                f"\n\n詳細: {message}"
+                "\n\nターミナルで `git push` を手動実行してください。"
+            )
 
 
 def main() -> None:
