@@ -1,0 +1,2 @@
+"""Stock theme dashboard package."""
+
