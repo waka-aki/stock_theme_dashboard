@@ -64,8 +64,7 @@ stock_theme_dashboard/
 create table watchlist (
   id          uuid primary key default gen_random_uuid(),
   user_id     uuid references auth.users not null,
-  category    text not null,
-  subcategory text,
+  theme       text not null,
   code        text not null,        -- 4桁日本株コード
   name        text not null,
   note        text,
