@@ -134,7 +134,6 @@ cp ../.env.example .env.local
 npm run dev
 ```
 
-ブラウザで `http://localhost:3000` を開きます。
 
 ### Vercel デプロイ
 
@@ -182,7 +181,6 @@ GitHub Repository の Settings → Secrets で以下を設定します。
 ## 注意点
 
 - yfinance では日本株のファンダメンタルデータが欠損することがあります。PER、PBR、時価総額が取得できない場合は欠損値として表示します。
-- yfinance を公開サービスで利用することは規約上グレーな領域があるため、Supabase Auth で本人のみアクセスできる構成を維持します。
 
 ## 将来的な拡張案
 
