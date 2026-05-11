@@ -8,10 +8,14 @@ export type WatchlistActionState = {
   success?: boolean;
 } | null;
 
-const CODE_PATTERN = /^\d{4}$/;
+const CODE_PATTERN = /^[0-9A-Z]{4}$/;
 
 function readField(formData: FormData, key: string): string {
   return String(formData.get(key) ?? "").trim();
+}
+
+function readCode(formData: FormData): string {
+  return readField(formData, "code").toUpperCase();
 }
 
 export async function createWatchlistEntry(
@@ -19,7 +23,7 @@ export async function createWatchlistEntry(
   formData: FormData,
 ): Promise<WatchlistActionState> {
   const theme = readField(formData, "theme");
-  const code = readField(formData, "code");
+  const code = readCode(formData);
   const name = readField(formData, "name");
   const note = readField(formData, "note");
 
@@ -27,7 +31,7 @@ export async function createWatchlistEntry(
     return { error: "テーマ、コード、銘柄名は必須です。" };
   }
   if (!CODE_PATTERN.test(code)) {
-    return { error: "コードは4桁の数字で入力してください。" };
+    return { error: "コードは4桁の英数字で入力してください。" };
   }
 
   const supabase = await createClient();
@@ -62,7 +66,7 @@ export async function updateWatchlistEntry(
   formData: FormData,
 ): Promise<WatchlistActionState> {
   const theme = readField(formData, "theme");
-  const code = readField(formData, "code");
+  const code = readCode(formData);
   const name = readField(formData, "name");
   const note = readField(formData, "note");
 
@@ -70,7 +74,7 @@ export async function updateWatchlistEntry(
     return { error: "テーマ、コード、銘柄名は必須です。" };
   }
   if (!CODE_PATTERN.test(code)) {
-    return { error: "コードは4桁の数字で入力してください。" };
+    return { error: "コードは4桁の英数字で入力してください。" };
   }
 
   const supabase = await createClient();

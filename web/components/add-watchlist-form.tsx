@@ -30,7 +30,7 @@ export function AddWatchlistForm() {
       <h2 className="text-sm font-semibold">銘柄を追加</h2>
       <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
         <Field label="テーマ" name="theme" placeholder="例: 半導体" required />
-        <Field label="コード" name="code" placeholder="4桁" required />
+        <Field label="コード" name="code" placeholder="例: 7203 / 485A" required />
         <Field label="銘柄名" name="name" placeholder="例: トヨタ自動車" required />
         <Field label="メモ" name="note" placeholder="任意" />
       </div>
