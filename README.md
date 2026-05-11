@@ -1,6 +1,6 @@
 # 日本株テーマ別株式ダッシュボード
 
-自分で分類した日本株のテーマ別ウォッチリストを、Webブラウザから一覧確認・編集できるダッシュボードです。株価、時価総額、PER、PBR、短期・中期の騰落率を1画面で整理します。
+自分で分類した日本株のテーマ別ウォッチリストを、Webブラウザから一覧確認・編集できるダッシュボードです。株価、時価総額、短期・中期の騰落率を1画面で整理します。
 
 このダッシュボードは投資助言ではありません。銘柄監視・情報整理を目的としたツールです。
 
@@ -78,9 +78,10 @@ create table stock_metrics (
   code        text not null,
   fetched_at  date not null,
   price       numeric,
-  market_cap  numeric,
-  per         numeric,
-  pbr         numeric,
+  market_cap  numeric,  -- yfinance 由来
+  change_1bd  numeric,  -- 1営業日（取引日ベース）
+  change_2bd  numeric,  -- 2営業日（取引日ベース）
+  change_3bd  numeric,  -- 3営業日（取引日ベース）
   change_5bd  numeric,  -- 5営業日（取引日ベース）
   change_2w   numeric,  -- 2週間（カレンダー）
   change_1m   numeric,  -- 1か月（カレンダー）

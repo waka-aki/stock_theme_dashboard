@@ -5,7 +5,6 @@ import {
   formatMarketCap,
   formatPercent,
   formatPrice,
-  formatRatio,
   percentClass,
 } from "@/lib/format";
 
@@ -17,8 +16,9 @@ export type DashboardRow = {
   note: string | null;
   price: number | null;
   market_cap: number | null;
-  per: number | null;
-  pbr: number | null;
+  change_1bd: number | null;
+  change_2bd: number | null;
+  change_3bd: number | null;
   change_5bd: number | null;
   change_2w: number | null;
   change_1m: number | null;
@@ -41,9 +41,10 @@ const COLUMNS: Column[] = [
   { key: "code", label: "コード", align: "left", sortable: true },
   { key: "name", label: "銘柄名", align: "left", sortable: true },
   { key: "price", label: "株価", align: "right", sortable: true },
-  { key: "market_cap", label: "時価総額", align: "right", sortable: true },
-  { key: "per", label: "PER", align: "right", sortable: true },
-  { key: "pbr", label: "PBR", align: "right", sortable: true },
+  { key: "market_cap", label: "時価総額(yf)", align: "right", sortable: true },
+  { key: "change_1bd", label: "1日", align: "right", sortable: true },
+  { key: "change_2bd", label: "2日", align: "right", sortable: true },
+  { key: "change_3bd", label: "3日", align: "right", sortable: true },
   { key: "change_5bd", label: "5日", align: "right", sortable: true },
   { key: "change_2w", label: "2週", align: "right", sortable: true },
   { key: "change_1m", label: "1ヶ月", align: "right", sortable: true },
@@ -84,7 +85,7 @@ export function DashboardTable({ rows }: { rows: DashboardRow[] }) {
 
   return (
     <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
-      <table className="w-full min-w-[1100px] bg-white dark:bg-zinc-950">
+      <table className="w-full min-w-[1400px] bg-white dark:bg-zinc-950">
         <thead className="bg-zinc-50 text-xs uppercase tracking-wide text-zinc-600 dark:bg-zinc-900 dark:text-zinc-400">
           <tr>
             {COLUMNS.map((col) => (
@@ -104,21 +105,24 @@ export function DashboardTable({ rows }: { rows: DashboardRow[] }) {
               key={row.id}
               className="border-t border-zinc-200 dark:border-zinc-800"
             >
-              <td className="px-3 py-2 text-sm">{row.theme}</td>
-              <td className="px-3 py-2 font-mono text-sm">{row.code}</td>
-              <td className="px-3 py-2 text-sm">{row.name}</td>
-              <td className="px-3 py-2 text-right font-mono text-sm">
+              <td className="whitespace-nowrap px-3 py-2 text-sm">
+                {row.theme}
+              </td>
+              <td className="whitespace-nowrap px-3 py-2 font-mono text-sm">
+                {row.code}
+              </td>
+              <td className="whitespace-nowrap px-3 py-2 text-sm">
+                {row.name}
+              </td>
+              <td className="whitespace-nowrap px-3 py-2 text-right font-mono text-sm">
                 {formatPrice(row.price)}
               </td>
-              <td className="px-3 py-2 text-right font-mono text-sm">
+              <td className="whitespace-nowrap px-3 py-2 text-right font-mono text-sm">
                 {formatMarketCap(row.market_cap)}
               </td>
-              <td className="px-3 py-2 text-right font-mono text-sm">
-                {formatRatio(row.per)}
-              </td>
-              <td className="px-3 py-2 text-right font-mono text-sm">
-                {formatRatio(row.pbr)}
-              </td>
+              <PercentCell value={row.change_1bd} />
+              <PercentCell value={row.change_2bd} />
+              <PercentCell value={row.change_3bd} />
               <PercentCell value={row.change_5bd} />
               <PercentCell value={row.change_2w} />
               <PercentCell value={row.change_1m} />
@@ -150,14 +154,18 @@ function HeaderCell({
 
   if (!column.sortable) {
     return (
-      <th className={`px-3 py-2 font-medium ${alignClass}`}>{column.label}</th>
+      <th
+        className={`whitespace-nowrap px-3 py-2 font-medium ${alignClass}`}
+      >
+        {column.label}
+      </th>
     );
   }
 
   const arrow = isActive ? (direction === "asc" ? "↑" : "↓") : "";
 
   return (
-    <th className={`px-3 py-2 ${alignClass}`}>
+    <th className={`whitespace-nowrap px-3 py-2 ${alignClass}`}>
       <button
         type="button"
         onClick={() => onSort(column.key)}
@@ -175,7 +183,7 @@ function HeaderCell({
 function PercentCell({ value }: { value: number | null }) {
   return (
     <td
-      className={`px-3 py-2 text-right font-mono text-sm ${percentClass(value)}`}
+      className={`whitespace-nowrap px-3 py-2 text-right font-mono text-sm ${percentClass(value)}`}
     >
       {formatPercent(value)}
     </td>

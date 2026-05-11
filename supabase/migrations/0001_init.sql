@@ -40,9 +40,10 @@ create table stock_metrics (
   code        text not null,
   fetched_at  date not null,
   price       numeric,
-  market_cap  numeric,
-  per         numeric,
-  pbr         numeric,
+  market_cap  numeric,   -- yfinance 由来。発行株式数 × 株価
+  change_1bd  numeric,   -- 1営業日（取引日ベース）
+  change_2bd  numeric,   -- 2営業日（取引日ベース）
+  change_3bd  numeric,   -- 3営業日（取引日ベース）
   change_5bd  numeric,   -- 5営業日（取引日ベース）
   change_2w   numeric,   -- 2週間（カレンダー）
   change_1m   numeric,   -- 1か月（カレンダー）

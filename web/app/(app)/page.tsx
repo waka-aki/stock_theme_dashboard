@@ -6,8 +6,9 @@ type StockMetricsLatest = {
   fetched_at: string;
   price: number | null;
   market_cap: number | null;
-  per: number | null;
-  pbr: number | null;
+  change_1bd: number | null;
+  change_2bd: number | null;
+  change_3bd: number | null;
   change_5bd: number | null;
   change_2w: number | null;
   change_1m: number | null;
@@ -66,8 +67,9 @@ export default async function DashboardPage() {
       note: w.note,
       price: m?.price ?? null,
       market_cap: m?.market_cap ?? null,
-      per: m?.per ?? null,
-      pbr: m?.pbr ?? null,
+      change_1bd: m?.change_1bd ?? null,
+      change_2bd: m?.change_2bd ?? null,
+      change_3bd: m?.change_3bd ?? null,
       change_5bd: m?.change_5bd ?? null,
       change_2w: m?.change_2w ?? null,
       change_1m: m?.change_1m ?? null,
