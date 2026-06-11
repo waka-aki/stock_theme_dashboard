@@ -1,8 +1,49 @@
 # 日本株テーマ別株式ダッシュボード
 
-自分で分類した日本株のテーマ別ウォッチリストを、Webブラウザから一覧確認・編集できるダッシュボードです。株価、時価総額、PER、PBR、短期・中期の騰落率を1画面で整理します。
+自分で分類した日本株を「テーマ別」のウォッチリストとして管理し、株価・時価総額・騰落率などの指標を 1 画面で確認できる Web アプリです。データ取得は GitHub Actions で自動化し、フロントは Vercel 上で公開しています。
 
-このダッシュボードは投資助言ではありません。銘柄監視・情報整理を目的としたツールです。
+🔗 **デモ: https://stock-theme-dashboard-tan.vercel.app**
+
+> ※ デモはログインが必要です。閲覧用アカウントが必要な場合はお知らせください。
+> ※ 本アプリは投資助言ではなく、銘柄監視・情報整理を目的としたツールです。
+
+---
+
+## スクリーンショット
+
+<!--
+  画像を docs/ フォルダに置いて、下のパスに合わせて差し替えてください。
+  例: docs/dashboard.png, docs/watchlist.png
+  推奨: 横幅 1200px 程度の PNG。GIF で操作の流れを見せるとより効果的です。
+-->
+
+| ダッシュボード | ウォッチリスト編集 |
+|:---:|:---:|
+| ![ダッシュボード画面](docs/dashboard.png) | ![ウォッチリスト編集画面](docs/watchlist.png) |
+
+---
+
+## 特徴
+
+- **テーマ別の銘柄管理** — 自分で定義したテーマ（カテゴリ）ごとに日本株を整理し、横断的に比較できる
+- **複数指標を 1 画面に集約** — 株価・時価総額・短期/中期の騰落率（5営業日〜3か月）をソート可能なテーブルで表示
+- **データ取得の自動化** — 平日 17:30 JST に GitHub Actions が yfinance で最新指標を取得し、DB へ自動反映
+- **認証付きのマルチユーザー対応** — Supabase Auth でログインし、Row Level Security により各ユーザーは自分のウォッチリストのみ参照可能
+- **サーバーレス構成** — Vercel + Supabase + GitHub Actions で、サーバー管理不要・低コストで運用
+
+---
+
+## 技術スタックと選定理由
+
+| 領域 | 技術 | 選定理由 |
+|------|------|----------|
+| フロントエンド | **Next.js (App Router) / TypeScript** | Server Components でデータ取得を完結させ、クライアント JS を最小化。型安全に開発するため |
+| 認証 / DB | **Supabase (Auth + Postgres)** | 認証・DB・RLS を一体で扱え、個人開発でも本番品質のアクセス制御を最短で実現できるため |
+| バッチ処理 | **Python + yfinance** | 株価データ取得のエコシステムが充実しており、定期取得スクリプトを簡潔に書けるため |
+| 自動化 / CI | **GitHub Actions** | cron による定期実行とシークレット管理を追加インフラなしで実現できるため |
+| ホスティング | **Vercel** | Next.js との親和性が高く、Git push から自動デプロイできるため |
+
+---
 
 ## アーキテクチャ
 
@@ -17,97 +58,24 @@
    平日 17:30 JST に定期実行
 ```
 
-3コンポーネントで構成します。
+- **Next.js (Vercel)**: ブラウザ UI。ダッシュボード表示と銘柄編集
+- **Supabase**: 認証と DB（Postgres）。RLS でユーザーごとのデータを分離
+- **GitHub Actions (Python)**: yfinance で株価・指標を取得し、Supabase へ書き込み
 
-- **Next.js (Vercel)**: ブラウザUI。ダッシュボード表示と銘柄編集
-- **Supabase**: 認証とDB（Postgres）
-- **GitHub Actions (Python)**: yfinanceで株価・指標を取得し、Supabaseへ書き込み
+---
 
-## ディレクトリ構成
+## こだわった点・工夫
 
-```text
-stock_theme_dashboard/
-├── web/                          # Next.js（Vercel デプロイ対象）
-│   ├── app/
-│   │   ├── (auth)/
-│   │   │   └── login/page.tsx
-│   │   ├── (app)/
-│   │   │   ├── page.tsx          # / = ダッシュボード
-│   │   │   └── watchlist/page.tsx
-│   │   └── layout.tsx
-│   ├── middleware.ts             # 未ログイン時のリダイレクト
-│   ├── components/
-│   │   ├── ui/                   # shadcn/ui
-│   │   ├── dashboard-table.tsx
-│   │   └── watchlist-editor.tsx
-│   ├── lib/supabase/
-│   │   ├── client.ts
-│   │   └── server.ts
-│   ├── package.json
-│   └── tsconfig.json
-├── jobs/                         # 定期取得ジョブ
-│   ├── fetch_metrics.py
-│   └── requirements.txt
-├── supabase/
-│   └── migrations/
-│       └── 0001_init.sql
-├── .github/workflows/
-│   └── update-metrics.yml
-├── .env.example
-└── README.md
-```
+- **権限分離によるセキュリティ設計**
+  フロントは公開可能な anon key + RLS で「本人のデータのみ」アクセスを保証。書き込みを伴うバッチのみ、RLS をバイパスする service_role key を GitHub Secrets 経由で使用し、鍵の用途と露出範囲を分離しました。
+- **取得失敗に強いデータパイプライン**
+  yfinance は日本株のファンダメンタルデータが欠損することがあるため、欠損値を `null` として安全に扱い、1 銘柄の取得失敗が全体の処理を止めないよう設計しています。
+- **運用コストゼロを目指したサーバーレス構成**
+  常時起動するサーバーを持たず、定期バッチ・DB・ホスティングをすべてマネージド/無料枠中心のサービスに寄せました。
 
-## DBスキーマ
+---
 
-```sql
--- 銘柄ウォッチリスト
-create table watchlist (
-  id          uuid primary key default gen_random_uuid(),
-  user_id     uuid references auth.users not null,
-  category    text not null,
-  subcategory text,
-  code        text not null,        -- 4桁日本株コード
-  name        text not null,
-  note        text,
-  created_at  timestamptz default now(),
-  updated_at  timestamptz default now(),
-  unique (user_id, code)
-);
-
--- 日次の株価・指標履歴
-create table stock_metrics (
-  code        text not null,
-  fetched_at  date not null,
-  price       numeric,
-  market_cap  numeric,
-  per         numeric,
-  pbr         numeric,
-  change_5bd  numeric,  -- 5営業日（取引日ベース）
-  change_2w   numeric,  -- 2週間（カレンダー）
-  change_1m   numeric,  -- 1か月（カレンダー）
-  change_2m   numeric,  -- 2か月（カレンダー）
-  change_3m   numeric,  -- 3か月（カレンダー）
-  primary key (code, fetched_at)
-);
-
--- 最新値を取り出すビュー（ダッシュボード表示用）
-create view stock_metrics_latest as
-  select distinct on (code) *
-  from stock_metrics
-  order by code, fetched_at desc;
-
--- RLS
-alter table watchlist enable row level security;
-create policy "own rows" on watchlist
-  for all
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
-
-alter table stock_metrics enable row level security;
-create policy "read all" on stock_metrics for select using (true);
-```
-
-## ページ構成
+## 画面構成
 
 | Path | 内容 |
 |------|------|
@@ -115,25 +83,50 @@ create policy "read all" on stock_metrics for select using (true);
 | `/` | ダッシュボード（テーマ別の株価表） |
 | `/watchlist` | 銘柄の追加・編集・削除 |
 
-## セットアップ
+---
 
-### Supabase
+## ディレクトリ構成
 
-1. https://supabase.com で新規プロジェクトを作成
-2. SQL Editor で `supabase/migrations/0001_init.sql` を実行
-3. Authentication → Email で自分用ユーザーを作成
-4. プロジェクトの URL / anon key / service_role key を控える
+```text
+stock_theme_dashboard/
+├── web/                       # Next.js（Vercel デプロイ対象）
+│   ├── app/                   # ルーティング・ページ
+│   ├── components/            # UI コンポーネント
+│   └── lib/supabase/          # Supabase クライアント
+├── jobs/                      # 定期取得ジョブ（Python）
+│   ├── fetch_metrics.py
+│   └── requirements.txt
+├── supabase/migrations/       # DB スキーマ（SQL）
+│   └── 0001_init.sql
+└── .github/workflows/         # GitHub Actions
+    └── update-metrics.yml
+```
 
-### Web (Next.js)
+DB スキーマ（テーブル定義・RLS ポリシー）の詳細は [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql) を参照してください。
+
+---
+
+## ローカルでの起動
 
 ```bash
 cd web
 npm install
 cp ../.env.example .env.local
-# .env.local を編集して Supabase の URL と anon key を設定
+# .env.local に Supabase の URL と anon key を設定
 npm run dev
 ```
 
+DB のセットアップや環境変数の一覧は、下記「セットアップ詳細」を参照してください。
+
+<details>
+<summary>セットアップ詳細</summary>
+
+### Supabase
+
+1. https://supabase.com で新規プロジェクトを作成
+2. SQL Editor で `supabase/migrations/0001_init.sql` を実行
+3. Authentication → Email でユーザーを作成
+4. プロジェクトの URL / anon key / service_role key を控える
 
 ### Vercel デプロイ
 
@@ -151,47 +144,30 @@ GitHub Repository の Settings → Secrets で以下を設定します。
 
 ワークフロー `.github/workflows/update-metrics.yml` が平日 17:30 JST に自動実行されます。手動実行も Actions タブから可能です。
 
-## 環境変数
+### 環境変数
 
 | 名前 | 設定場所 | 用途 |
 |------|----------|------|
 | `NEXT_PUBLIC_SUPABASE_URL` | Vercel / `.env.local` | フロントから接続 |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Vercel / `.env.local` | フロントから接続（RLSで保護） |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Vercel / `.env.local` | フロントから接続（RLS で保護） |
 | `SUPABASE_URL` | GitHub Secrets | ジョブから接続 |
 | `SUPABASE_SERVICE_ROLE_KEY` | GitHub Secrets | RLS を無視してジョブから書き込み |
 
-## 銘柄の追加
+</details>
 
-`/watchlist` ページからブラウザ上で追加・編集・削除できます。CSVファイルの直接編集は不要です。
+---
 
-入力する `code` は4桁の日本株コードです。yfinance への問い合わせ時にジョブ側で `.T` を自動付与します。
+## 今後の拡張案
 
-## 実装ロードマップ
+- J-Quants API 対応によるデータ品質の向上
+- 銘柄ごとの株価チャート（保存済み `stock_metrics` 履歴を使用）
+- 決算発表日・適時開示の取得
+- セクターごとのヒートマップ表示
 
-| Phase | 内容 |
-|-------|------|
-| 1 | Supabase プロジェクト作成、DBスキーマ反映 |
-| 2 | Next.js 初期化、Vercel デプロイ（空画面でOK） |
-| 3 | Supabase Auth ログイン |
-| 4 | ダッシュボード表（`stock_metrics_latest` ビュー使用） |
-| 5 | Watchlist Editor |
-| 6 | yfinance ジョブ + GitHub Actions 化 |
-| 7 | 任意: ソート、フィルタ、銘柄チャート、ニュース |
-
-## 注意点
-
-- yfinance では日本株のファンダメンタルデータが欠損することがあります。PER、PBR、時価総額が取得できない場合は欠損値として表示します。
+---
 
 ## データソースとライセンスについて
 
 - 株価・指標データは [yfinance](https://github.com/ranaroussi/yfinance)（Apache-2.0）を通じて Yahoo Finance から取得しています。
 - これらのデータは Yahoo Finance に帰属し、その利用は Yahoo の利用規約に従います。**個人利用・学習を目的としたツール**であり、データの再配布や商用利用を意図したものではありません。
 - 本リポジトリにはコードのみを含み、取得した株価データそのものは含まれていません。
-
-## 将来的な拡張案
-
-- J-Quants API 対応
-- ニュース取得
-- 銘柄ごとの株価チャート（保存済み `stock_metrics` 履歴を使用）
-- 決算発表日や適時開示の取得
-- セクターごとのヒートマップ表示
