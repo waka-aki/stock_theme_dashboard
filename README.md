@@ -182,6 +182,12 @@ GitHub Repository の Settings → Secrets で以下を設定します。
 
 - yfinance では日本株のファンダメンタルデータが欠損することがあります。PER、PBR、時価総額が取得できない場合は欠損値として表示します。
 
+## データソースとライセンスについて
+
+- 株価・指標データは [yfinance](https://github.com/ranaroussi/yfinance)（Apache-2.0）を通じて Yahoo Finance から取得しています。
+- これらのデータは Yahoo Finance に帰属し、その利用は Yahoo の利用規約に従います。**個人利用・学習を目的としたツール**であり、データの再配布や商用利用を意図したものではありません。
+- 本リポジトリにはコードのみを含み、取得した株価データそのものは含まれていません。
+
 ## 将来的な拡張案
 
 - J-Quants API 対応
